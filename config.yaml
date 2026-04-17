@@ -1,0 +1,20 @@
+model:
+  name: "Qwen/Qwen2.5-3B-Instruct"
+  dtype: "fp16" # fp16, bf16, fp32
+  attn_implementation: "eager"
+  load_in_4bit: true
+
+experiment:
+  seed: 42
+  num_samples_musique: 300
+  scaling_doc_counts: [5, 10, 15, 20, 25, 30]
+  max_new_tokens_musique: 20
+  max_new_tokens_scaling: 20 # TTFT
+
+dataset:
+  name: "bdsaglam/musique"
+  subset: "answerable"
+
+paths:
+  save_dir: "./results"
+  cache_dir: "./.cache/huggingface"
