@@ -1,0 +1,40 @@
+# --- Python & Environment ---
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv/
+env/
+venv/
+build/
+dist/
+*.egg-info/
+
+# --- Hugging Face & Models ---
+.cache/
+hub/
+models/
+*.bin
+*.pth
+*.safetensors
+*.index.json
+
+# --- Dataset & Data ---
+data/
+*.jsonl
+*.csv
+
+# --- Experiment Results ---
+results/
+logs/
+*.png
+*.pdf
+*.csv
+validation_results.json
+validation_log.txt
+
+# --- IDE & System Files ---
+.idea/
+.DS_Store
+*.swp
+*.swo
