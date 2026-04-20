@@ -1,13 +1,13 @@
 model:
-  name: "Qwen/Qwen2.5-3B-Instruct"
+  name: "Qwen/Qwen2.5-7B-Instruct"
   dtype: "fp16" # fp16, bf16, fp32
   attn_implementation: "eager"
-  load_in_4bit: true
+  load_in_4bit: false
 
 experiment:
   seed: 42
   num_samples_musique: 300
-  scaling_doc_counts: [5, 10, 15, 20, 25, 30]
+  scaling_doc_counts: [5, 10, 15, 20, 25]
   max_new_tokens_musique: 20
   max_new_tokens_scaling: 20 # TTFT
 

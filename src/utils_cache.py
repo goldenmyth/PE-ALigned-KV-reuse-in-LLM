@@ -13,6 +13,7 @@ def get_kv_cache_list(model, tokenizer, text):
     else:
         for item in kv:
             res.append((item[0], item[1], None))
+
     return res, inputs.input_ids.shape[1]
 
 def pack_to_cache(kv_list):
@@ -21,6 +22,7 @@ def pack_to_cache(kv_list):
     for i, (k, v, _) in enumerate(kv_list):
         new_cache.update(k, v, i)
     new_cache._seen_tokens = seq_len
+
     return new_cache
 
 def get_kv_cache_size_mb(cache_obj):
@@ -32,6 +34,7 @@ def get_kv_cache_size_mb(cache_obj):
     else:
         for item in cache_obj:
             total_bytes += item[0].nbytes + item[1].nbytes
+
     return total_bytes / (1024 * 1024)
 
 def precompute_segments(model, tokenizer, text_list):
@@ -39,6 +42,7 @@ def precompute_segments(model, tokenizer, text_list):
     for txt in text_list:
         kv, length = get_kv_cache_list(model, tokenizer, txt)
         cached_data.append((kv, length))
+
     return cached_data
 
 def assemble_cache(cached_data, transform_fn, model_config):
@@ -55,4 +59,5 @@ def assemble_cache(cached_data, transform_fn, model_config):
                 None
             )
         offset += len_p
+        
     return pack_to_cache(current_kv)

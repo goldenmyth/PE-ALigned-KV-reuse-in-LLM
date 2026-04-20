@@ -43,7 +43,6 @@ def run_inference(model, tokenizer, input_ids, cache_obj=None, max_new=20, compu
     n_past = cache_obj.get_seq_length() if cache_obj else 0
     n_new = input_ids.shape[1]
     mask = torch.ones((1, n_past + n_new), device=model.device, dtype=torch.long)
-    pos = torch.arange(n_past, n_past + n_new, device=model.device) if cache_obj else None
 
     gen_config = GenerationConfig(
         max_new_tokens=max_new,
@@ -60,7 +59,6 @@ def run_inference(model, tokenizer, input_ids, cache_obj=None, max_new=20, compu
             input_ids=input_ids,
             past_key_values=cache_obj,
             attention_mask=mask,
-            cache_position=pos,
             generation_config=gen_config
         )
 
