@@ -15,6 +15,19 @@ def normalize_answer(s):
 
     return white_space_fix(remove_articles(remove_punc(s.lower())))
 
+def clean_model_output(text):
+    """New function for DeepSeek-R1.
+    Function cuts out a block with 'thought'
+    and return a clear output"""
+
+    text = re.sub(r'<thought>.*?</thought>', '', text, flags=re.DOTALL)
+    text = text.replace('<|im_end|>', '').replace('<|im_start|>', '').strip()
+
+    parts = text.split('\n')
+    clean_parts = [p.strip() for p in parts if p.strip()]
+
+    return clean_parts[-1] if clean_parts else ''
+    
 def compute_f1(a_gold, a_pred):
     gold_toks = normalize_answer(a_gold).split()
     pred_toks = normalize_answer(a_pred).split()

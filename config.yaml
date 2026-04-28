@@ -1,5 +1,5 @@
 model:
-  name: "Qwen/Qwen2.5-7B-Instruct"
+  name: "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
   dtype: "fp16" # fp16, bf16, fp32
   attn_implementation: "eager"
   load_in_4bit: false
@@ -9,7 +9,7 @@ experiment:
   num_samples_musique: 300
   scaling_doc_counts: [5, 10, 15, 20, 25]
   max_new_tokens_musique: 20
-  max_new_tokens_scaling: 20 # TTFT
+  max_new_tokens_scaling: 1024 #20 # TTFT
 
 dataset:
   name: "bdsaglam/musique"
