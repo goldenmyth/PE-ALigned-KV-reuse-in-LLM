@@ -39,7 +39,7 @@ def load_model():
     
     return model, tokenizer
 
-def run_inference(model, tokenizer, input_ids, cache_obj=None, max_new=20, compute_deep_metrics=True):
+def run_inference(model, tokenizer, input_ids, cache_obj=None, max_new=20, compute_attn=True):
     n_past = cache_obj.get_seq_length() if cache_obj else 0
     n_new = input_ids.shape[1]
     mask = torch.ones((1, n_past + n_new), device=model.device, dtype=torch.long)
@@ -49,8 +49,8 @@ def run_inference(model, tokenizer, input_ids, cache_obj=None, max_new=20, compu
         do_sample=False,
         use_cache=True,
         pad_token_id=tokenizer.eos_token_id,
-        output_attentions=compute_deep_metrics,
-        output_logits=compute_deep_metrics,
+        output_attentions=compute_attn,
+        output_logits=True, # mb need to add parametr compute_logit
         return_dict_in_generate=True
     )
 
@@ -63,7 +63,7 @@ def run_inference(model, tokenizer, input_ids, cache_obj=None, max_new=20, compu
         )
 
     gen_text = tokenizer.decode(outputs.sequences[0][n_new:], skip_special_tokens=True).strip()
-    logits = outputs.logits if compute_deep_metrics else None
-    attentions = outputs.attentions if compute_deep_metrics else None
+    logits = outputs.logits 
+    attentions = outputs.attentions if compute_attn else None
 
     return gen_text, logits, attentions

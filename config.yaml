@@ -1,20 +1,45 @@
 model:
-  name: "Qwen/Qwen2.5-7B-Instruct"
-  dtype: "fp16" # fp16, bf16, fp32
-  attn_implementation: "eager"
+  name: "Qwen/Qwen2.5-3B-Instruct" # Can change 7B
+  dtype: "bf16" 
+  attn_implementation: "eager" # sdpa
   load_in_4bit: false
+  device: "cuda"
 
-experiment:
+global:
   seed: 42
-  num_samples_musique: 300
-  scaling_doc_counts: [5, 10, 15, 20, 25]
-  max_new_tokens_musique: 20
-  max_new_tokens_scaling: 20 # TTFT
-
-dataset:
-  name: "bdsaglam/musique"
-  subset: "answerable"
+  strategies: ["Aligned", "Naive"]
 
 paths:
   save_dir: "./results"
   cache_dir: "./.cache/huggingface"
+
+datasets:
+  musique:
+    enabled: true
+    path: "bdsaglam/musique"
+    subset: "answerable"
+    split: "validation"
+    num_samples: 20
+    max_new_tokens: 20
+    task_type: "qa"
+    compute_attn: true
+
+  samsum:
+    enabled: true
+    path:  "knkarthick/samsum"
+    subset: null
+    split: "test"
+    num_samples: 20
+    max_new_tokens: 128
+    task_type: "summarization"
+    compute_attn: true
+
+  ruler:
+    enabled: true
+    path: "rbiswasfc/ruler"
+    subset: "niah_multikey_1_4k" # niah_multikey_1_8k
+    split: "validation"
+    num_samples: 10
+    max_new_tokens: 20
+    task_type: "qa"
+    compute_attn: false
