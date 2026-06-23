@@ -28,7 +28,6 @@ data/
 results/
 logs/
 *.png
-*.pdf
 *.csv
 validation_results.json
 validation_log.txt

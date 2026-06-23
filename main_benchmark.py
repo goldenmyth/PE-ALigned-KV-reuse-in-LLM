@@ -12,6 +12,8 @@ from src.utils_cache import precompute_segments, assemble_cache
 from src.utils_metrics import calculate_comprehensive_metrics, calculate_baseline_metrics
 from src.utils_data import get_data_for_dataset
 
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 def cleanup():
     gc.collect()
     torch.cuda.empty_cache()
@@ -22,12 +24,14 @@ def main():
     
     os.makedirs(config.SAVE_DIR, exist_ok=True)
 
+    target_debug_ids = [0, 2, 4]    
+
     for ds_name, ds_cfg in config.get_enabled_datasets().items():
         print(f"\nProcessing: {ds_name.upper()}")
         dataset = load_dataset(ds_cfg['path'], ds_cfg['subset'], split=ds_cfg['split'])
         
-        if ds_name == "musique":
-            dataset = dataset.filter(lambda x: len([p for p in x['paragraphs'] if p['is_supporting']]) > 1)
+        #if ds_name == "musique":
+        #    dataset = dataset.filter(lambda x: len([p for p in x['paragraphs'] if p['is_supporting']]) > 1)
         
         dataset = dataset.select(range(min(ds_cfg['num_samples'], len(dataset))))
         ds_results = []
@@ -45,7 +49,7 @@ def main():
                 
                 # 2. BASELINE
                 full_prompt = torch.cat([get_ids(pre_txt)] + [get_ids(p) for p in p_txts] + [ids_que], dim=1)
-                res_b, logits_b, attn_b = run_inference(model, tokenizer, full_prompt, max_new=max_tokens, compute_attn=compute_attn)
+                res_b, logits_b, attn_b, _ = run_inference(model, tokenizer, full_prompt, max_new=max_tokens, compute_attn=compute_attn)
 
                 b_metrics = calculate_baseline_metrics(target_answer, res_b, task_type)
             
@@ -65,7 +69,7 @@ def main():
                 # 4. STRATEGIES
                 for strategy, transform in [("Aligned", shift_cache), ("Naive", identity_transform)]:
                     cache = assemble_cache(cached_segments, transform, model.config)
-                    res, logits, attn = run_inference(model, tokenizer, ids_que, cache_obj=cache, max_new=max_tokens, compute_attn=compute_attn)
+                    res, logits, attn, _ = run_inference(model, tokenizer, ids_que, cache_obj=cache, max_new=max_tokens, compute_attn=compute_attn) #g_ids
                     
                     try:
                         m = calculate_comprehensive_metrics(
@@ -78,6 +82,23 @@ def main():
                             case_report[f"{strategy}_{metric_key}"] = val
 
                     finally:
+                        '''if idx in target_debug_ids:
+                            if strategy == "Aligned":
+                                print(f"IDX: {idx}   Target: {target_answer};  Aligned: {res}")
+                            else:
+                                print(f" IDX: {idx}  Target: {target_answer};  Naive: {res}")
+                            print(f"DEBUG IDs: {g_ids.tolist()}")
+                            print(f"DEBUG Tokens: {tokenizer.convert_ids_to_tokens(g_ids)}")
+
+                            for step_idx in range(len(logits)):
+                                probs = torch.softmax(logits[step_idx][0], dim=-1)
+                                top_k = torch.topk(probs, 3)
+                                chosen_token = tokenizer.decode(g_ids[step_idx])
+                                print(f"Step {step_idx} | Chosen: '{chosen_token}' (id:{g_ids[step_idx].item()})")
+                                for i in range(3):
+                                    print(f"Top-{i}: '{tokenizer.decode(top_k.indices[i])}' p={top_k.values[i].item():.4f}")
+                        
+                        print("="*10 + "\n")'''
                         del cache, res, logits, attn
                         cleanup()
                 
@@ -91,7 +112,7 @@ def main():
                 cleanup()
                 continue
 
-        pd.DataFrame(ds_results).to_csv(f"{config.SAVE_DIR}/{ds_name}_results.csv", index=False)
+        pd.DataFrame(ds_results).to_csv(f"{config.SAVE_DIR}/{ds_name}_results7B.csv", index=False)
         cleanup()
 
 if __name__ == "__main__":

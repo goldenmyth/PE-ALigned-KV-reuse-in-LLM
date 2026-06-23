@@ -4,6 +4,7 @@ import random
 import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, GenerationConfig
 from src.config_loader import config
+from src.attention_patch import apply_attention_patch
 
 def set_seed(seed):
     random.seed(seed)
@@ -27,6 +28,9 @@ def load_model():
     tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME, cache_dir=config.CACHE_DIR)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+
+    if config.USE_UPCASTING and config.ATTN_IMPL == "eager":
+        apply_attention_patch()
         
     model = AutoModelForCausalLM.from_pretrained(
         config.MODEL_NAME,
@@ -42,7 +46,7 @@ def load_model():
 def run_inference(model, tokenizer, input_ids, cache_obj=None, max_new=20, compute_attn=True):
     n_past = cache_obj.get_seq_length() if cache_obj else 0
     n_new = input_ids.shape[1]
-    mask = torch.ones((1, n_past + n_new), device=model.device, dtype=torch.long)
+    mask = torch.ones((1, n_past + n_new), device=model.device, dtype=torch.bool)
 
     gen_config = GenerationConfig(
         max_new_tokens=max_new,
@@ -61,9 +65,11 @@ def run_inference(model, tokenizer, input_ids, cache_obj=None, max_new=20, compu
             attention_mask=mask,
             generation_config=gen_config
         )
-
+    
+    gen_ids = outputs.sequences[0][n_new:]
     gen_text = tokenizer.decode(outputs.sequences[0][n_new:], skip_special_tokens=True).strip()
     logits = outputs.logits 
     attentions = outputs.attentions if compute_attn else None
 
-    return gen_text, logits, attentions
+    return gen_text, logits, attentions, gen_ids
+    

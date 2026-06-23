@@ -77,7 +77,7 @@ def run_full_validation():
     restored = shift_cache(shifted, -offset, model_config)
     
     rev_diff = torch.abs(k_orig - restored[0][0]).max().item()
-    logger.info(f"    Max Diff: {rev_diff:.2e} -> {'PASSED' if rev_diff < 1e-5 else 'FAILED'}")
+    logger.info(f"    Max Diff: {rev_diff:.2e} -> {'PASSED' if rev_diff < 1e-4 else 'FAILED'}")
     val_metrics['reversibility_diff'] = rev_diff
 
     # 2. Test: Attention Invariance

@@ -1,7 +1,8 @@
 model:
-  name: "Qwen/Qwen2.5-3B-Instruct" # Can change 7B
-  dtype: "bf16" 
-  attn_implementation: "eager" # sdpa
+  name: "Qwen/Qwen2.5-7B-Instruct" # Can change 3B
+  dtype: "fp16"
+  attn_implementation: "eager" #"sdpa"
+  use_upcasting: true
   load_in_4bit: false
   device: "cuda"
 
@@ -19,8 +20,8 @@ datasets:
     path: "bdsaglam/musique"
     subset: "answerable"
     split: "validation"
-    num_samples: 20
-    max_new_tokens: 20
+    num_samples: 2000
+    max_new_tokens: 15
     task_type: "qa"
     compute_attn: true
 
@@ -29,17 +30,17 @@ datasets:
     path:  "knkarthick/samsum"
     subset: null
     split: "test"
-    num_samples: 20
+    num_samples: 1000
     max_new_tokens: 128
     task_type: "summarization"
     compute_attn: true
 
   ruler:
-    enabled: true
+    enabled: false
     path: "rbiswasfc/ruler"
     subset: "niah_multikey_1_4k" # niah_multikey_1_8k
     split: "validation"
-    num_samples: 10
-    max_new_tokens: 20
+    num_samples: 500
+    max_new_tokens: 10
     task_type: "qa"
     compute_attn: false
