@@ -29,6 +29,33 @@ def compute_f1(a_gold, a_pred):
 
     return (2 * precision * recall) / (precision + recall)
 
+def compute_char_f1(a_gold, a_pred):
+    gold = normalize_answer(a_gold).replace(" ", "")
+    pred = normalize_answer(a_pred).replace(" ", "")
+
+    gold_chars = list(gold)
+    pred_chars = list(pred)
+
+    if len(gold_chars) == 0 or len(pred_chars) == 0:
+        return int(gold_chars == pred_chars)
+
+    common = Counter(gold_chars) & Counter(pred_chars)
+    num_same = sum(common.values())
+
+    if num_same == 0:
+        return 0.0
+
+    precision = num_same / len(pred_chars)
+    recall = num_same / len(gold_chars)
+
+    return 2 * precision * recall / (precision + recall)
+
+
+def compute_task_f1(a_gold, a_pred, dataset_name=None):
+    if dataset_name == "ruler":
+        return compute_char_f1(a_gold, a_pred)
+    return compute_f1(a_gold, a_pred)
+
 def compute_exact(a_gold, a_pred):
     return int(normalize_answer(a_gold) == normalize_answer(a_pred))
 
@@ -40,7 +67,7 @@ def compute_rouge_l(a_gold, a_pred):
 def calculate_baseline_metrics(target_answer, res_baseline, task_type="qa"):
     metrics = {}
     
-    metrics["Baseline_F1"] = compute_f1(target_answer, res_baseline)
+    metrics["Baseline_F1"] = compute_task_f1(target_answer, res_baseline)
 
     if task_type == "qa":
         metrics["Baseline_EM"] = compute_exact(target_answer, res_baseline)        
@@ -58,7 +85,7 @@ def calculate_comprehensive_metrics(base_logits, test_logits, base_attn, test_at
     elif task_type == "summarization":
         metrics['RougeL'] = compute_rouge_l(ground_truth_text, test_gen_text)
     
-    metrics['F1'] = compute_f1(ground_truth_text, test_gen_text)
+    metrics['F1'] = compute_task_f1(ground_truth_text, test_gen_text)
 
     with torch.no_grad():
         b_log = base_logits[0][0].float() if isinstance(base_logits, tuple) else base_logits[0, -1, :].float()
@@ -86,10 +113,11 @@ def calculate_comprehensive_metrics(base_logits, test_logits, base_attn, test_at
             raw = attn[0][-1][0] if isinstance(attn, tuple) else attn[-1][0]
             
             return raw.mean(dim=0)[-1, :].cpu().float().numpy()
-
-        a_base = get_attn_weights(base_attn)
-        a_test = get_attn_weights(test_attn)
-        min_l = min(len(a_base), len(a_test))
-        metrics['Attn_Corr'], _ = spearmanr(a_base[:min_l], a_test[:min_l])
+        if base_attn and test_attn:
+            a_base = get_attn_weights(base_attn)
+            a_test = get_attn_weights(test_attn)
+            min_l = min(len(a_base), len(a_test))
+            metrics['Attn_Corr'], _ = spearmanr(a_base[:min_l], a_test[:min_l])
 
     return metrics
+    

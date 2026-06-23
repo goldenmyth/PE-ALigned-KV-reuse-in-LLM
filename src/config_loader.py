@@ -14,6 +14,7 @@ class Config:
         model_cfg = c.get('model', {})
         self.MODEL_NAME = model_cfg.get('name', "Qwen/Qwen2.5-3B-Instruct")
         self.ATTN_IMPL = model_cfg.get('attn_implementation', "eager")
+        self.USE_UPCASTING = model_cfg.get('use_upcasting', False)
         self.LOAD_4BIT = model_cfg.get('load_in_4bit', False)
         self.DEVICE = model_cfg.get('device', "cuda" if torch.cuda.is_available() else "cpu")
         

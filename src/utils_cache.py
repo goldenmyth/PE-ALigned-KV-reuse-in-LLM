@@ -59,5 +59,6 @@ def assemble_cache(cached_data, transform_fn, model_config):
                 None
             )
         offset += len_p
-        
+
     return pack_to_cache(current_kv)
+    

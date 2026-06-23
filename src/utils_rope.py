@@ -22,9 +22,24 @@ def shift_cache(kv_list, offset, model_config):
     for k, v, mask in kv_list:
         k_fp32 = k.to(torch.float32)
         k_rotated = (k_fp32 * cos) + (rotate_half(k_fp32) * sin)
+
+        #k_rotated = torch.clamp(k_rotated, min=-256.0, max=256.0)
+        '''# Debug
+        norm_before = torch.norm(k, dim=-1).mean()
+        norm_after = torch.norm(k_rotated, dim=-1).mean()
+
+        max_val = torch.max(torch.abs(k_rotated))
+        if max_val > 100:
+            print(f"!!! ПРЕДУПРЕЖДЕНИЕ: Очень высокие значения в К: {max_val:.4f}")
+        if torch.abs(norm_before - norm_after) > 1e-4:
+            print(f"!!! ОШИБКА: Поворот меняет норму! {norm_before:.4f} -> {norm_after:.4f}")
+        if torch.isnan(k_rotated.to(dtype)).any(): print(f"Сдвиг породил NaN на офсете {offset}")
+        if torch.isinf(k_rotated.to(dtype)).any(): print(f"Сдвиг породил Inf на офсете {offset}")'''
+
         res.append((k_rotated.to(dtype), v, mask))
     
     return res
 
 def identity_transform(kv, offset, model_config):
     return kv
+    

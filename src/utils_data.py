@@ -3,14 +3,16 @@ import re
 def get_data_for_dataset(ds_name, sample):
     if ds_name == "musique":
         system_msg = (
-        "You are a precise question-answering assistant. "
-        "Answer the question using the provided context with a short phrase (1-5 words). "
-        "Do not use Markdown, do not provide links, do not use full sentences. "
-        "Provide only the factual answer."
+	    "You are an answering machine. Output ONLY the answer in the format:\n"
+	    "Answer the question using only the given Context.\n"
+            "Retrun only the short answer itself"
+	    "Do NOT use any formatting whatsoever. "
+	    "If you include markdown, links, or extra text, your answer is invalid. "
+	    "Base your answer solely on the given Context."
         )
-        paragraphs = [p['paragraph_text'] for p in sample['paragraphs'] if p['is_supporting']]
+        #paragraphs = [p['paragraph_text'] for p in sample['paragraphs'] if p['is_supporting']]
         prefix_text = f"<|im_start|>system\n{system_msg}<|im_end|>\n<|im_start|>user\nContext:"
-        segments = [f"\n{p}" for p in paragraphs]
+        segments = [f"\n{p['paragraph_text']}" for p in sample['paragraphs']]
         suffix_text = f"\n\nQuestion: {sample['question']}<|im_end|>\n<|im_start|>assistant\n"
         answer = sample['answer']
 
@@ -31,14 +33,14 @@ def get_data_for_dataset(ds_name, sample):
         
         instruction = lines[0]
         question = lines[2]
-        haystack = "\n".join(lines[1])
+        haystack = lines[1]
 
         system_msg = "You are a precise retrieval assistant. Answer with the MAGIC NUMBER only. DO NOT write sentences, DO NOT explain. Just the digits."
         prefix_text = f"<|im_start|>system\n{system_msg}<|im_end|>\n<|im_start|>user\n{instruction}\n\nContext:"
         
         sentences = re.split(r'(?<=[.!?])\s+', haystack)
         
-        num_chunks = 10
+        num_chunks = 20
         n = len(sentences)
         
         segments = []
@@ -57,3 +59,4 @@ def get_data_for_dataset(ds_name, sample):
         answer = str(sample['outputs'][0]) if sample['outputs'] else ""
         
     return prefix_text, segments, suffix_text, answer
+    
